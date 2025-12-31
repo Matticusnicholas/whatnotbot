@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whatnot Giveaway Bot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #8892b0;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 i {
+            color: #e94560;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccd6f6;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #e94560;
+            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.2);
+        }
+
+        .form-group input::placeholder {
+            color: #64748b;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #e94560;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #e94560;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(90deg, #dc3545, #ff4757);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-panel {
+            margin-top: 30px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .status-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .status-item .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #e94560;
+        }
+
+        .status-item .label {
+            font-size: 0.85rem;
+            color: #8892b0;
+            margin-top: 5px;
+        }
+
+        .state-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .state-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .state-dot.idle { background: #64748b; animation: none; }
+        .state-dot.starting, .state-dot.logging_in { background: #ffc107; }
+        .state-dot.hunting { background: #28a745; }
+        .state-dot.stopping { background: #fd7e14; }
+        .state-dot.stopped { background: #dc3545; animation: none; }
+        .state-dot.error { background: #dc3545; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .log-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #a8b2d1;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .credentials-fields {
+            display: none;
+        }
+
+        .credentials-fields.active {
+            display: block;
+        }
+
+        .google-notice {
+            display: none;
+            background: rgba(66, 133, 244, 0.2);
+            border: 1px solid rgba(66, 133, 244, 0.4);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            color: #a8b2d1;
+        }
+
+        .google-notice.active {
+            display: block;
+        }
+
+        .google-notice i {
+            color: #4285f4;
+            margin-right: 8px;
+        }
+
+        .browser-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .browser-icon {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .browser-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .browser-icon.selected {
+            border-color: #e94560;
+            background: rgba(233, 69, 96, 0.1);
+        }
+
+        .browser-icon input {
+            display: none;
+        }
+
+        .advanced-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #8892b0;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .advanced-toggle:hover {
+            color: #ccd6f6;
+        }
+
+        .advanced-settings {
+            display: none;
+        }
+
+        .advanced-settings.active {
+            display: block;
+        }
+
+        .current-stream {
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .current-stream.active {
+            display: block;
+        }
+
+        .current-stream .stream-label {
+            font-size: 0.85rem;
+            color: #8892b0;
+            margin-bottom: 5px;
+        }
+
+        .current-stream .stream-name {
+            color: #e94560;
+            font-weight: 600;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            color: #64748b;
+        }
+
+        footer a {
+            color: #e94560;
+            text-decoration: none;
+        }
+
+        .disclaimer {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #ffc107;
+        }
+
+        .disclaimer i {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-gift"></i> Whatnot Giveaway Bot</h1>
+            <p>Automatically enter giveaways on Whatnot live streams</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Configuration Panel -->
+            <div class="card">
+                <h2><i class="fas fa-cog"></i> Configuration</h2>
+
+                <form id="botForm">
+                    <!-- Browser Selection -->
+                    <div class="form-group">
+                        <label>Select Browser</label>
+                        <div class="browser-icons">
+                            <label class="browser-icon selected" id="firefoxOption">
+                                <input type="radio" name="browser" value="firefox" checked>
+                                <i class="fab fa-firefox-browser fa-2x"></i>
+                                <span>Firefox</span>
+                            </label>
+                            <label class="browser-icon" id="safariOption">
+                                <input type="radio" name="browser" value="safari">
+                                <i class="fab fa-safari fa-2x"></i>
+                                <span>Safari</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Login Method -->
+                    <div class="form-group">
+                        <label>Login Method</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="login_method" value="credentials" checked>
+                                <span>Email & Password</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="login_method" value="google">
+                                <span>Google Login</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Credentials Fields -->
+                    <div class="credentials-fields active" id="credentialsFields">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" placeholder="your@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <!-- Google Login Notice -->
+                    <div class="google-notice" id="googleNotice">
+                        <i class="fab fa-google"></i>
+                        When using Google login, a browser window will open and you'll need to complete the login manually. The bot will wait for you to finish.
+                    </div>
+
+                    <!-- Advanced Settings Toggle -->
+                    <div class="advanced-toggle" id="advancedToggle">
+                        <i class="fas fa-chevron-right" id="advancedIcon"></i>
+                        <span>Advanced Settings</span>
+                    </div>
+
+                    <!-- Advanced Settings -->
+                    <div class="advanced-settings" id="advancedSettings">
+                        <div class="form-group">
+                            <label for="giveaway_wait_time">Giveaway Wait Time (seconds)</label>
+                            <input type="number" id="giveaway_wait_time" name="giveaway_wait_time" value="30" min="10" max="120">
+                        </div>
+                        <div class="form-group">
+                            <label for="stream_check_interval">Stream Check Interval (seconds)</label>
+                            <input type="number" id="stream_check_interval" name="stream_check_interval" value="5" min="3" max="30">
+                        </div>
+                        <div class="form-group">
+                            <label for="max_streams">Max Streams per Session</label>
+                            <input type="number" id="max_streams" name="max_streams" value="50" min="10" max="200">
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="headless" name="headless">
+                            <label for="headless">Run in headless mode (no visible browser)</label>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <button type="submit" class="btn btn-primary" id="startBtn">
+                        <i class="fas fa-play"></i> Start Bot
+                    </button>
+                    <button type="button" class="btn btn-danger" id="stopBtn" style="display: none; margin-top: 10px;">
+                        <i class="fas fa-stop"></i> Stop Bot
+                    </button>
+                </form>
+
+                <div class="disclaimer">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Disclaimer:</strong> Use this bot responsibly. Automated actions may violate Whatnot's Terms of Service. Use at your own risk.
+                </div>
+            </div>
+
+            <!-- Status Panel -->
+            <div class="card">
+                <h2><i class="fas fa-chart-line"></i> Status & Logs</h2>
+
+                <div class="state-indicator">
+                    <div class="state-dot idle" id="stateDot"></div>
+                    <span id="stateText">Idle - Ready to start</span>
+                </div>
+
+                <div class="current-stream" id="currentStream">
+                    <div class="stream-label">Currently Watching</div>
+                    <div class="stream-name" id="streamName">-</div>
+                </div>
+
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="value" id="giveawaysEntered">0</div>
+                        <div class="label">Giveaways Entered</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="value" id="streamsVisited">0</div>
+                        <div class="label">Streams Visited</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="value" id="uptime">0:00</div>
+                        <div class="label">Uptime</div>
+                    </div>
+                </div>
+
+                <div class="log-container" id="logContainer">
+                    <div class="log-entry">Waiting to start...</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Whatnot Giveaway Bot &copy; 2024 | For educational purposes only</p>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        let startTime = null;
+        let uptimeInterval = null;
+
+        // DOM Elements
+        const botForm = document.getElementById('botForm');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const stateDot = document.getElementById('stateDot');
+        const stateText = document.getElementById('stateText');
+        const logContainer = document.getElementById('logContainer');
+        const giveawaysEntered = document.getElementById('giveawaysEntered');
+        const streamsVisited = document.getElementById('streamsVisited');
+        const uptimeDisplay = document.getElementById('uptime');
+        const currentStream = document.getElementById('currentStream');
+        const streamName = document.getElementById('streamName');
+        const credentialsFields = document.getElementById('credentialsFields');
+        const googleNotice = document.getElementById('googleNotice');
+        const advancedToggle = document.getElementById('advancedToggle');
+        const advancedSettings = document.getElementById('advancedSettings');
+        const advancedIcon = document.getElementById('advancedIcon');
+
+        // Browser selection
+        document.querySelectorAll('.browser-icon').forEach(icon => {
+            icon.addEventListener('click', () => {
+                document.querySelectorAll('.browser-icon').forEach(i => i.classList.remove('selected'));
+                icon.classList.add('selected');
+            });
+        });
+
+        // Login method toggle
+        document.querySelectorAll('input[name="login_method"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'credentials') {
+                    credentialsFields.classList.add('active');
+                    googleNotice.classList.remove('active');
+                } else {
+                    credentialsFields.classList.remove('active');
+                    googleNotice.classList.add('active');
+                }
+            });
+        });
+
+        // Advanced settings toggle
+        advancedToggle.addEventListener('click', () => {
+            advancedSettings.classList.toggle('active');
+            advancedIcon.classList.toggle('fa-chevron-right');
+            advancedIcon.classList.toggle('fa-chevron-down');
+        });
+
+        // Form submission
+        botForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(botForm);
+            const data = {
+                browser: formData.get('browser'),
+                login_method: formData.get('login_method'),
+                email: formData.get('email'),
+                password: formData.get('password'),
+                headless: formData.get('headless') === 'on',
+                giveaway_wait_time: parseInt(formData.get('giveaway_wait_time')),
+                stream_check_interval: parseInt(formData.get('stream_check_interval')),
+                max_streams: parseInt(formData.get('max_streams'))
+            };
+
+            try {
+                const response = await fetch('/api/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    startBtn.style.display = 'none';
+                    stopBtn.style.display = 'block';
+                    startTime = new Date();
+                    startUptimeCounter();
+                    logContainer.innerHTML = '';
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Failed to start bot: ' + error.message);
+            }
+        });
+
+        // Stop button
+        stopBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/stop', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Failed to stop bot: ' + error.message);
+            }
+        });
+
+        // Socket events
+        socket.on('log', (data) => {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = data.message;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        });
+
+        socket.on('status_update', (status) => {
+            // Update state indicator
+            stateDot.className = 'state-dot ' + status.state;
+            stateText.textContent = getStateText(status.state);
+
+            // Update counters
+            giveawaysEntered.textContent = status.giveaways_entered;
+            streamsVisited.textContent = status.streams_visited;
+
+            // Update current stream
+            if (status.current_stream) {
+                currentStream.classList.add('active');
+                streamName.textContent = status.current_stream;
+            } else {
+                currentStream.classList.remove('active');
+            }
+
+            // Update buttons
+            if (status.state === 'stopped' || status.state === 'idle' || status.state === 'error') {
+                startBtn.style.display = 'block';
+                stopBtn.style.display = 'none';
+                stopUptimeCounter();
+            }
+        });
+
+        function getStateText(state) {
+            const states = {
+                'idle': 'Idle - Ready to start',
+                'starting': 'Starting browser...',
+                'logging_in': 'Logging into Whatnot...',
+                'hunting': 'Hunting for giveaways...',
+                'stopping': 'Stopping bot...',
+                'stopped': 'Bot stopped',
+                'error': 'Error occurred'
+            };
+            return states[state] || state;
+        }
+
+        function startUptimeCounter() {
+            uptimeInterval = setInterval(() => {
+                if (startTime) {
+                    const elapsed = Math.floor((new Date() - startTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    uptimeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function stopUptimeCounter() {
+            if (uptimeInterval) {
+                clearInterval(uptimeInterval);
+                uptimeInterval = null;
+            }
+        }
+
+        // Initial status fetch
+        fetch('/api/status')
+            .then(res => res.json())
+            .then(status => {
+                socket.emit('status_update', status);
+            });
+    </script>
+</body>
+</html>
