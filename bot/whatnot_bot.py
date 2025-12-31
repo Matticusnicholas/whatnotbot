@@ -58,11 +58,22 @@ class WhatnotBot:
                 if self.config.headless:
                     options.add_argument("--headless=new")
 
+                # Window and visibility settings
                 options.add_argument("--window-size=1280,900")
+                options.add_argument("--window-position=0,0")
                 options.add_argument("--disable-blink-features=AutomationControlled")
+                options.add_argument("--start-maximized")
+                options.add_argument("--no-first-run")
+                options.add_argument("--no-default-browser-check")
 
+                # Create the driver
                 self.driver = uc.Chrome(options=options)
                 self.log("Using undetected Chrome (best for avoiding detection)")
+
+                # Force window to foreground
+                self.driver.set_window_position(0, 0)
+                self.driver.set_window_size(1280, 900)
+                self.driver.maximize_window()
             except ImportError:
                 self.log("undetected-chromedriver not installed, falling back to Firefox")
                 self.config.browser = "firefox"
@@ -135,6 +146,32 @@ class WhatnotBot:
             pass
 
         self.log("Browser initialized successfully")
+
+    def _bring_to_foreground(self):
+        """Attempt to bring the browser window to the foreground."""
+        try:
+            # Maximize and position window
+            self.driver.set_window_position(0, 0)
+            self.driver.set_window_size(1280, 900)
+            self.driver.maximize_window()
+
+            # Switch to the main window
+            self.driver.switch_to.window(self.driver.current_window_handle)
+
+            # Try JavaScript focus
+            self.driver.execute_script("window.focus();")
+
+            # Alert trick to bring window to front (then dismiss it)
+            try:
+                self.driver.execute_script("alert('Please complete login in this window');")
+                time.sleep(0.5)
+                self.driver.switch_to.alert.accept()
+            except Exception:
+                pass
+
+            self.log("Browser window should now be in foreground")
+        except Exception as e:
+            self.log(f"Could not bring window to foreground: {e}")
 
     def login_with_credentials(self):
         """Log into Whatnot using email and password."""
@@ -384,6 +421,9 @@ class WhatnotBot:
         self.driver.get(self.config.login_url)
         time.sleep(3)
 
+        # Bring browser to foreground for manual login
+        self._bring_to_foreground()
+
         try:
             # Find and click Google login button
             google_selectors = [
@@ -414,7 +454,12 @@ class WhatnotBot:
                 self.log("Could not find Google button automatically.")
                 self.log("Please click 'Continue with Google' manually in the browser.")
 
+            # Bring browser to foreground again after click (new window may open)
+            time.sleep(2)
+            self._bring_to_foreground()
+
             # Wait for user to complete Google login manually
+            self.log("BROWSER WINDOW SHOULD BE VISIBLE - Complete login there!")
             self.log("Please complete Google login in the browser window...")
             self.log("Waiting up to 180 seconds for login...")
 
