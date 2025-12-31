@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Whatnot Giveaway Bot</string>
+    <string name="accessibility_service_description">This service monitors the Whatnot app for giveaways and automatically enters them for you. It watches for the giveaway button and taps it when detected.</string>
+    <string name="enable_accessibility">Enable Accessibility Service</string>
+    <string name="enable_overlay">Enable Overlay Permission</string>
+    <string name="start_bot">Start Bot</string>
+    <string name="stop_bot">Stop Bot</string>
+    <string name="status_idle">Status: Idle</string>
+    <string name="status_running">Status: Running</string>
+    <string name="status_searching">Watching for giveaways...</string>
+    <string name="giveaways_entered">Giveaways Entered: %d</string>
+    <string name="instructions">Instructions:\n\n1. Enable Accessibility Service\n2. Enable Overlay Permission\n3. Open Whatnot app\n4. Start the bot\n5. Browse streams - bot auto-enters giveaways!</string>
+    <string name="notification_channel_name">Giveaway Bot Service</string>
+    <string name="notification_title">Whatnot Bot Active</string>
+    <string name="notification_text">Watching for giveaways...</string>
+</resources>

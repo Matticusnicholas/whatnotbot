@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Whatnot theme colors -->
+    <color name="whatnot_primary">#E94560</color>
+    <color name="whatnot_primary_dark">#C73E54</color>
+    <color name="whatnot_accent">#FF6B6B</color>
+    <color name="background_dark">#1A1A2E</color>
+    <color name="surface_dark">#16213E</color>
+    <color name="success_green">#28A745</color>
+    <color name="overlay_background">#CC000000</color>
+</resources>
