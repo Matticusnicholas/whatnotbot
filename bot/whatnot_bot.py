@@ -501,6 +501,55 @@ class WhatnotBot:
             self.log(f"Google login error: {str(e)}")
             raise
 
+    def login_manual(self):
+        """Manual login - user logs in themselves, bot waits."""
+        self.log("=" * 50)
+        self.log("MANUAL LOGIN MODE")
+        self.log("=" * 50)
+        self.log("")
+        self.log("Opening Whatnot login page...")
+        self.driver.get(self.config.login_url)
+
+        self._bring_to_foreground()
+
+        self.log("")
+        self.log("Please log in to Whatnot in the browser window.")
+        self.log("Use any method you prefer (Google, Email, Apple, etc.)")
+        self.log("")
+        self.log("The bot will automatically detect when you're logged in")
+        self.log("and start hunting for giveaways!")
+        self.log("")
+        self.log("Waiting up to 5 minutes for login...")
+
+        # Wait for user to log in - check every 2 seconds
+        for i in range(150):  # 5 minutes
+            time.sleep(2)
+
+            try:
+                current_url = self.driver.current_url
+
+                # Check if user navigated away from login page
+                if "whatnot.com" in current_url and "login" not in current_url.lower() and "auth" not in current_url.lower():
+                    self.log("")
+                    self.log("Login detected! You're now logged in.")
+                    self.logged_in = True
+
+                    # Navigate to live streams
+                    self.log("Navigating to live streams...")
+                    self.driver.get(self.config.browse_url)
+                    time.sleep(3)
+                    return
+
+                # Show progress every 30 seconds
+                if i > 0 and i % 15 == 0:
+                    remaining = (150 - i) * 2
+                    self.log(f"Still waiting for login... ({remaining} seconds remaining)")
+
+            except Exception as e:
+                self.log(f"Error checking login status: {e}")
+
+        raise Exception("Login timeout - please try again")
+
     def _verify_login(self):
         """Verify that login was successful."""
         time.sleep(2)

@@ -100,7 +100,10 @@ def run_bot(config):
         add_log("Logging into Whatnot...")
         bot_status["state"] = "logging_in"
 
-        if config.login_method == "google":
+        if config.login_method == "manual":
+            add_log("Manual login mode - please log in using the browser window...")
+            bot_instance.login_manual()
+        elif config.login_method == "google":
             add_log("Please complete Google login in the browser window...")
             bot_instance.login_with_google()
         else:

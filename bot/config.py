@@ -14,7 +14,7 @@ class BotConfig:
     use_profile: bool = False  # Use existing Chrome profile (for Google login)
 
     # Login settings
-    login_method: str = "credentials"  # "credentials" or "google"
+    login_method: str = "manual"  # "manual" (recommended), "credentials", or "google"
     email: str = ""
     password: str = ""
 
@@ -33,8 +33,8 @@ class BotConfig:
         if self.browser not in ["chrome", "firefox", "safari"]:
             return False, "Browser must be 'chrome', 'firefox', or 'safari'"
 
-        if self.login_method not in ["credentials", "google"]:
-            return False, "Login method must be 'credentials' or 'google'"
+        if self.login_method not in ["manual", "credentials", "google"]:
+            return False, "Login method must be 'manual', 'credentials', or 'google'"
 
         if self.login_method == "credentials":
             if not self.email:

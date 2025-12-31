@@ -5,3 +5,5 @@ webdriver-manager>=4.0.0
 python-socketio>=5.10.0
 eventlet>=0.33.0
 undetected-chromedriver>=3.5.0
+pyautogui>=0.9.54
+Pillow>=10.0.0
