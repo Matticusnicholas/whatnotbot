@@ -101,7 +101,10 @@ class WhatnotBot:
         """Log into Whatnot using email and password."""
         self.log("Navigating to Whatnot login page...")
         self.driver.get(self.config.login_url)
-        time.sleep(3)
+
+        # Wait longer for page to fully load
+        self.log("Waiting for page to fully load...")
+        time.sleep(5)
 
         try:
             # Log page info for debugging
@@ -123,26 +126,69 @@ class WhatnotBot:
                         if btn.is_displayed():
                             self.log(f"Found email login button: {btn.text}")
                             btn.click()
-                            time.sleep(2)
+                            time.sleep(3)
                             break
                 except Exception:
                     continue
 
-            # Wait for page to settle
+            # Wait for login form to load - look for password field as indicator
+            self.log("Waiting for login form to load...")
+            password_found = False
+            for attempt in range(10):
+                try:
+                    password_fields = self.driver.find_elements(By.CSS_SELECTOR, "input[type='password']")
+                    for pf in password_fields:
+                        if pf.is_displayed():
+                            password_found = True
+                            self.log("Login form detected (password field visible)")
+                            break
+                    if password_found:
+                        break
+                except Exception:
+                    pass
+                time.sleep(1)
+                self.log(f"Waiting for login form... attempt {attempt + 1}/10")
+
+            if not password_found:
+                self.log("Warning: Password field not found yet, continuing anyway...")
+
+            # Wait a bit more for form to be interactive
             time.sleep(2)
+
+            # Helper function to check if an input is a search field
+            def is_search_field(inp):
+                """Check if input is a search field (should be skipped)."""
+                try:
+                    inp_type = (inp.get_attribute("type") or "").lower()
+                    inp_name = (inp.get_attribute("name") or "").lower()
+                    inp_placeholder = (inp.get_attribute("placeholder") or "").lower()
+                    inp_id = (inp.get_attribute("id") or "").lower()
+                    inp_class = (inp.get_attribute("class") or "").lower()
+                    inp_role = (inp.get_attribute("role") or "").lower()
+
+                    search_indicators = ["search", "query", "find", "lookup"]
+                    all_attrs = f"{inp_type} {inp_name} {inp_placeholder} {inp_id} {inp_class} {inp_role}"
+
+                    return any(indicator in all_attrs for indicator in search_indicators)
+                except Exception:
+                    return False
 
             # Find all input fields and log them for debugging
             all_inputs = self.driver.find_elements(By.TAG_NAME, "input")
             self.log(f"Found {len(all_inputs)} input fields on page")
 
             for idx, inp in enumerate(all_inputs):
-                inp_type = inp.get_attribute("type")
-                inp_name = inp.get_attribute("name")
-                inp_placeholder = inp.get_attribute("placeholder")
-                inp_id = inp.get_attribute("id")
-                self.log(f"Input {idx}: type={inp_type}, name={inp_name}, placeholder={inp_placeholder}, id={inp_id}")
+                try:
+                    inp_type = inp.get_attribute("type")
+                    inp_name = inp.get_attribute("name")
+                    inp_placeholder = inp.get_attribute("placeholder")
+                    inp_id = inp.get_attribute("id")
+                    is_search = is_search_field(inp)
+                    self.log(f"Input {idx}: type={inp_type}, name={inp_name}, placeholder={inp_placeholder}, id={inp_id}, is_search={is_search}")
+                except Exception:
+                    pass
 
-            # Try multiple strategies to find email field
+            # Try multiple strategies to find email field (excluding search fields)
             email_field = None
             email_selectors = [
                 (By.CSS_SELECTOR, "input[type='email']"),
@@ -152,7 +198,9 @@ class WhatnotBot:
                 (By.CSS_SELECTOR, "input[placeholder*='Email']"),
                 (By.CSS_SELECTOR, "input[autocomplete='email']"),
                 (By.CSS_SELECTOR, "input[autocomplete='username']"),
-                (By.XPATH, "//input[@type='text' or @type='email'][1]"),
+                (By.CSS_SELECTOR, "form input[type='text']"),
+                (By.CSS_SELECTOR, "form input[type='email']"),
+                (By.XPATH, "//form//input[@type='text' or @type='email']"),
                 (By.XPATH, "//label[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'email')]/following::input[1]"),
                 (By.XPATH, "//label[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'email')]/..//input"),
             ]
@@ -161,7 +209,7 @@ class WhatnotBot:
                 try:
                     elements = self.driver.find_elements(by, selector)
                     for el in elements:
-                        if el.is_displayed() and el.is_enabled():
+                        if el.is_displayed() and el.is_enabled() and not is_search_field(el):
                             email_field = el
                             self.log(f"Found email field with selector: {selector}")
                             break
@@ -171,27 +219,35 @@ class WhatnotBot:
                     continue
 
             if not email_field:
-                # Fallback: use first visible text input
+                # Fallback: use first visible text/email input that's NOT a search field
                 for inp in all_inputs:
-                    if inp.is_displayed() and inp.get_attribute("type") in ["text", "email", ""]:
-                        email_field = inp
-                        self.log("Using first visible text input as email field")
-                        break
+                    try:
+                        inp_type = inp.get_attribute("type") or ""
+                        if inp.is_displayed() and inp_type in ["text", "email", ""] and not is_search_field(inp):
+                            email_field = inp
+                            self.log("Using first visible non-search text input as email field")
+                            break
+                    except Exception:
+                        continue
 
             if not email_field:
                 raise Exception("Could not find email input field")
 
-            # Clear and fill email
+            # Scroll to email field and click to focus
             self.log("Entering email...")
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", email_field)
+            time.sleep(0.5)
             email_field.click()
-            time.sleep(0.3)
+            time.sleep(0.5)
+
+            # Clear field
             email_field.clear()
-            time.sleep(0.2)
+            time.sleep(0.3)
 
             # Type email character by character for reliability
             for char in self.config.email:
                 email_field.send_keys(char)
-                time.sleep(0.05)
+                time.sleep(0.03)
 
             time.sleep(0.5)
 
