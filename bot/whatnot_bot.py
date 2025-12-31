@@ -84,69 +84,239 @@ class WhatnotBot:
         """Log into Whatnot using email and password."""
         self.log("Navigating to Whatnot login page...")
         self.driver.get(self.config.login_url)
-        time.sleep(2)
+        time.sleep(3)
 
         try:
-            # Wait for and click the email login option if present
-            try:
-                email_login_btn = self.wait.until(
-                    EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Email')]"))
-                )
-                email_login_btn.click()
-                time.sleep(1)
-            except TimeoutException:
-                pass  # Email form might already be visible
+            # Log page info for debugging
+            self.log(f"Current URL: {self.driver.current_url}")
 
-            # Find and fill email field
-            email_field = self.wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email'], input[name='email'], input[placeholder*='email' i]"))
-            )
+            # First, try to find and click "Log in with Email" or similar button
+            email_login_buttons = [
+                "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'email')]",
+                "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'log in')]",
+                "//a[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'email')]",
+                "//div[contains(@class, 'email')]//button",
+                "//span[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'email')]/ancestor::button",
+            ]
+
+            for xpath in email_login_buttons:
+                try:
+                    buttons = self.driver.find_elements(By.XPATH, xpath)
+                    for btn in buttons:
+                        if btn.is_displayed():
+                            self.log(f"Found email login button: {btn.text}")
+                            btn.click()
+                            time.sleep(2)
+                            break
+                except Exception:
+                    continue
+
+            # Wait for page to settle
+            time.sleep(2)
+
+            # Find all input fields and log them for debugging
+            all_inputs = self.driver.find_elements(By.TAG_NAME, "input")
+            self.log(f"Found {len(all_inputs)} input fields on page")
+
+            for idx, inp in enumerate(all_inputs):
+                inp_type = inp.get_attribute("type")
+                inp_name = inp.get_attribute("name")
+                inp_placeholder = inp.get_attribute("placeholder")
+                inp_id = inp.get_attribute("id")
+                self.log(f"Input {idx}: type={inp_type}, name={inp_name}, placeholder={inp_placeholder}, id={inp_id}")
+
+            # Try multiple strategies to find email field
+            email_field = None
+            email_selectors = [
+                (By.CSS_SELECTOR, "input[type='email']"),
+                (By.CSS_SELECTOR, "input[name='email']"),
+                (By.CSS_SELECTOR, "input[name='username']"),
+                (By.CSS_SELECTOR, "input[placeholder*='email' i]"),
+                (By.CSS_SELECTOR, "input[placeholder*='Email']"),
+                (By.CSS_SELECTOR, "input[autocomplete='email']"),
+                (By.CSS_SELECTOR, "input[autocomplete='username']"),
+                (By.XPATH, "//input[@type='text' or @type='email'][1]"),
+                (By.XPATH, "//label[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'email')]/following::input[1]"),
+                (By.XPATH, "//label[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'email')]/..//input"),
+            ]
+
+            for by, selector in email_selectors:
+                try:
+                    elements = self.driver.find_elements(by, selector)
+                    for el in elements:
+                        if el.is_displayed() and el.is_enabled():
+                            email_field = el
+                            self.log(f"Found email field with selector: {selector}")
+                            break
+                    if email_field:
+                        break
+                except Exception:
+                    continue
+
+            if not email_field:
+                # Fallback: use first visible text input
+                for inp in all_inputs:
+                    if inp.is_displayed() and inp.get_attribute("type") in ["text", "email", ""]:
+                        email_field = inp
+                        self.log("Using first visible text input as email field")
+                        break
+
+            if not email_field:
+                raise Exception("Could not find email input field")
+
+            # Clear and fill email
+            self.log("Entering email...")
+            email_field.click()
+            time.sleep(0.3)
             email_field.clear()
-            email_field.send_keys(self.config.email)
+            time.sleep(0.2)
+
+            # Type email character by character for reliability
+            for char in self.config.email:
+                email_field.send_keys(char)
+                time.sleep(0.05)
+
             time.sleep(0.5)
 
-            # Find and fill password field
-            password_field = self.driver.find_element(
-                By.CSS_SELECTOR, "input[type='password'], input[name='password']"
-            )
+            # Find password field
+            password_field = None
+            password_selectors = [
+                (By.CSS_SELECTOR, "input[type='password']"),
+                (By.CSS_SELECTOR, "input[name='password']"),
+                (By.CSS_SELECTOR, "input[autocomplete='current-password']"),
+                (By.XPATH, "//input[@type='password']"),
+                (By.XPATH, "//label[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'password')]/following::input[1]"),
+            ]
+
+            for by, selector in password_selectors:
+                try:
+                    elements = self.driver.find_elements(by, selector)
+                    for el in elements:
+                        if el.is_displayed() and el.is_enabled():
+                            password_field = el
+                            self.log(f"Found password field with selector: {selector}")
+                            break
+                    if password_field:
+                        break
+                except Exception:
+                    continue
+
+            if not password_field:
+                raise Exception("Could not find password input field")
+
+            # Clear and fill password
+            self.log("Entering password...")
+            password_field.click()
+            time.sleep(0.3)
             password_field.clear()
-            password_field.send_keys(self.config.password)
+            time.sleep(0.2)
+
+            # Type password character by character
+            for char in self.config.password:
+                password_field.send_keys(char)
+                time.sleep(0.05)
+
             time.sleep(0.5)
 
-            # Submit the form
-            password_field.send_keys(Keys.RETURN)
+            # Find and click submit button
+            self.log("Looking for login button...")
+            submit_button = None
+            submit_selectors = [
+                (By.CSS_SELECTOR, "button[type='submit']"),
+                (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'log in')]"),
+                (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'login')]"),
+                (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'sign in')]"),
+                (By.XPATH, "//input[@type='submit']"),
+                (By.CSS_SELECTOR, "form button"),
+            ]
 
-            # Wait for successful login (redirect or user menu)
-            time.sleep(3)
+            for by, selector in submit_selectors:
+                try:
+                    elements = self.driver.find_elements(by, selector)
+                    for el in elements:
+                        if el.is_displayed() and el.is_enabled():
+                            submit_button = el
+                            self.log(f"Found submit button: {el.text}")
+                            break
+                    if submit_button:
+                        break
+                except Exception:
+                    continue
+
+            if submit_button:
+                submit_button.click()
+                self.log("Clicked login button")
+            else:
+                # Fallback: press Enter on password field
+                self.log("No submit button found, pressing Enter...")
+                password_field.send_keys(Keys.RETURN)
+
+            # Wait for login to complete
+            self.log("Waiting for login to complete...")
+            time.sleep(5)
             self._verify_login()
 
         except Exception as e:
             self.log(f"Login error: {str(e)}")
+            # Try to save screenshot for debugging
+            try:
+                self.driver.save_screenshot("/tmp/whatnot_login_error.png")
+                self.log("Screenshot saved to /tmp/whatnot_login_error.png")
+            except Exception:
+                pass
             raise
 
     def login_with_google(self):
         """Log into Whatnot using Google OAuth."""
         self.log("Navigating to Whatnot login page...")
         self.driver.get(self.config.login_url)
-        time.sleep(2)
+        time.sleep(3)
 
         try:
             # Find and click Google login button
-            google_btn = self.wait.until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Google')]"))
-            )
-            google_btn.click()
+            google_selectors = [
+                "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'google')]",
+                "//button[contains(@class, 'google')]",
+                "//div[contains(@class, 'google')]//button",
+                "//button[.//img[contains(@src, 'google')]]",
+                "//a[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'google')]",
+            ]
+
+            google_btn = None
+            for xpath in google_selectors:
+                try:
+                    buttons = self.driver.find_elements(By.XPATH, xpath)
+                    for btn in buttons:
+                        if btn.is_displayed():
+                            google_btn = btn
+                            break
+                    if google_btn:
+                        break
+                except Exception:
+                    continue
+
+            if google_btn:
+                self.log("Found Google login button, clicking...")
+                google_btn.click()
+            else:
+                self.log("Could not find Google button automatically.")
+                self.log("Please click 'Continue with Google' manually in the browser.")
 
             # Wait for user to complete Google login manually
             self.log("Please complete Google login in the browser window...")
-            self.log("Waiting up to 120 seconds for login...")
+            self.log("Waiting up to 180 seconds for login...")
 
             # Wait for redirect back to Whatnot
-            for _ in range(120):
+            for i in range(180):
                 time.sleep(1)
-                if "whatnot.com" in self.driver.current_url and "login" not in self.driver.current_url:
+                current_url = self.driver.current_url
+                if "whatnot.com" in current_url and "login" not in current_url and "auth" not in current_url:
+                    self.log("Detected redirect back to Whatnot!")
                     break
+                if i % 30 == 0 and i > 0:
+                    self.log(f"Still waiting... ({180 - i} seconds remaining)")
 
+            time.sleep(2)
             self._verify_login()
 
         except Exception as e:
