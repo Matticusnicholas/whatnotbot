@@ -60,11 +60,12 @@ def start_bot():
 
     # Create bot configuration
     config = BotConfig(
-        browser=data.get("browser", "firefox"),
+        browser=data.get("browser", "chrome"),
         login_method=data.get("login_method", "credentials"),
         email=data.get("email", ""),
         password=data.get("password", ""),
         headless=data.get("headless", False),
+        use_profile=data.get("use_profile", False),
         giveaway_wait_time=data.get("giveaway_wait_time", 30),
         stream_check_interval=data.get("stream_check_interval", 5),
         max_streams=data.get("max_streams", 50)

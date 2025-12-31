@@ -54,6 +54,9 @@ class WhatnotBot:
             # Use undetected-chromedriver to avoid bot detection
             try:
                 import undetected_chromedriver as uc
+                import os
+                import platform
+
                 options = uc.ChromeOptions()
                 if self.config.headless:
                     options.add_argument("--headless=new")
@@ -65,6 +68,24 @@ class WhatnotBot:
                 options.add_argument("--start-maximized")
                 options.add_argument("--no-first-run")
                 options.add_argument("--no-default-browser-check")
+
+                # Use existing Chrome profile for Google login
+                if self.config.use_profile:
+                    self.log("Using existing Chrome profile (you must close Chrome first!)")
+                    system = platform.system()
+                    if system == "Windows":
+                        profile_path = os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\User Data")
+                    elif system == "Darwin":  # macOS
+                        profile_path = os.path.expanduser("~/Library/Application Support/Google/Chrome")
+                    else:  # Linux
+                        profile_path = os.path.expanduser("~/.config/google-chrome")
+
+                    if os.path.exists(profile_path):
+                        options.add_argument(f"--user-data-dir={profile_path}")
+                        options.add_argument("--profile-directory=Default")
+                        self.log(f"Using Chrome profile from: {profile_path}")
+                    else:
+                        self.log(f"Chrome profile not found at {profile_path}, using fresh profile")
 
                 # Create the driver
                 self.driver = uc.Chrome(options=options)

@@ -11,6 +11,7 @@ class BotConfig:
     # Browser settings
     browser: str = "chrome"  # "chrome" (recommended), "firefox", or "safari"
     headless: bool = False
+    use_profile: bool = False  # Use existing Chrome profile (for Google login)
 
     # Login settings
     login_method: str = "credentials"  # "credentials" or "google"

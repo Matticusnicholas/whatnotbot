@@ -451,7 +451,11 @@
                     <!-- Google Login Notice -->
                     <div class="google-notice" id="googleNotice">
                         <i class="fab fa-google"></i>
-                        When using Google login, a browser window will open and you'll need to complete the login manually. The bot will wait for you to finish.
+                        <strong>Important for Google Login:</strong> Check the box below to use your existing Chrome profile where you're already logged into Google. You must <strong>close Chrome completely</strong> before starting the bot.
+                        <div class="form-group checkbox-group" style="margin-top: 15px;">
+                            <input type="checkbox" id="use_profile" name="use_profile" checked>
+                            <label for="use_profile">Use my Chrome profile (required for Google login)</label>
+                        </div>
                     </div>
 
                     <!-- Advanced Settings Toggle -->
@@ -598,6 +602,7 @@
                 email: formData.get('email'),
                 password: formData.get('password'),
                 headless: formData.get('headless') === 'on',
+                use_profile: formData.get('use_profile') === 'on',
                 giveaway_wait_time: parseInt(formData.get('giveaway_wait_time')),
                 stream_check_interval: parseInt(formData.get('stream_check_interval')),
                 max_streams: parseInt(formData.get('max_streams'))
