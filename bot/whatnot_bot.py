@@ -59,6 +59,10 @@ class WhatnotBot:
             options.set_preference("dom.webnotifications.enabled", False)
             options.set_preference("media.volume_scale", "0.0")
 
+            # Ensure browser opens in visible window
+            options.add_argument("--width=1280")
+            options.add_argument("--height=900")
+
             try:
                 # Try to use webdriver-manager for automatic driver management
                 service = FirefoxService(GeckoDriverManager().install())
@@ -77,7 +81,20 @@ class WhatnotBot:
 
         # Set up wait
         self.wait = WebDriverWait(self.driver, 10)
+
+        # Make browser visible and bring to front
+        self.driver.set_window_position(0, 0)
+        self.driver.set_window_size(1280, 900)
         self.driver.maximize_window()
+
+        # Try to bring window to foreground
+        try:
+            self.driver.switch_to.window(self.driver.current_window_handle)
+            # Execute JavaScript to focus the window
+            self.driver.execute_script("window.focus();")
+        except Exception:
+            pass
+
         self.log("Browser initialized successfully")
 
     def login_with_credentials(self):
