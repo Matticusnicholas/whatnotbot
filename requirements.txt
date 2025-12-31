@@ -4,3 +4,4 @@ selenium>=4.15.0
 webdriver-manager>=4.0.0
 python-socketio>=5.10.0
 eventlet>=0.33.0
+undetected-chromedriver>=3.5.0

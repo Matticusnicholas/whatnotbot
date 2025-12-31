@@ -50,14 +50,43 @@ class WhatnotBot:
         """Initialize the Selenium WebDriver based on configuration."""
         self.log(f"Initializing {self.config.browser} browser...")
 
-        if self.config.browser == "firefox":
+        if self.config.browser == "chrome":
+            # Use undetected-chromedriver to avoid bot detection
+            try:
+                import undetected_chromedriver as uc
+                options = uc.ChromeOptions()
+                if self.config.headless:
+                    options.add_argument("--headless=new")
+
+                options.add_argument("--window-size=1280,900")
+                options.add_argument("--disable-blink-features=AutomationControlled")
+
+                self.driver = uc.Chrome(options=options)
+                self.log("Using undetected Chrome (best for avoiding detection)")
+            except ImportError:
+                self.log("undetected-chromedriver not installed, falling back to Firefox")
+                self.config.browser = "firefox"
+                return self.initialize_browser()
+
+        elif self.config.browser == "firefox":
             options = FirefoxOptions()
             if self.config.headless:
                 options.add_argument("--headless")
 
-            # Common Firefox settings
+            # Anti-detection settings for Firefox
+            options.set_preference("dom.webdriver.enabled", False)
+            options.set_preference("useAutomationExtension", False)
             options.set_preference("dom.webnotifications.enabled", False)
             options.set_preference("media.volume_scale", "0.0")
+
+            # Make Firefox appear more like a regular browser
+            options.set_preference("general.useragent.override",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0")
+            options.set_preference("network.http.sendRefererHeader", 2)
+            options.set_preference("privacy.trackingprotection.enabled", False)
+
+            # Disable webdriver flags
+            options.set_preference("marionette.enabled", False)
 
             # Ensure browser opens in visible window
             options.add_argument("--width=1280")
@@ -70,6 +99,16 @@ class WhatnotBot:
             except Exception:
                 # Fallback to system geckodriver
                 self.driver = webdriver.Firefox(options=options)
+
+            # Execute stealth scripts to hide webdriver
+            try:
+                self.driver.execute_script("""
+                    Object.defineProperty(navigator, 'webdriver', {
+                        get: () => undefined
+                    });
+                """)
+            except Exception:
+                pass
 
         elif self.config.browser == "safari":
             # Safari WebDriver (macOS only)

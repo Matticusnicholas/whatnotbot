@@ -9,7 +9,7 @@ class BotConfig:
     """Configuration for the Whatnot bot."""
 
     # Browser settings
-    browser: str = "firefox"  # "firefox" or "safari"
+    browser: str = "chrome"  # "chrome" (recommended), "firefox", or "safari"
     headless: bool = False
 
     # Login settings
@@ -29,8 +29,8 @@ class BotConfig:
 
     def validate(self) -> tuple[bool, str]:
         """Validate the configuration."""
-        if self.browser not in ["firefox", "safari"]:
-            return False, "Browser must be 'firefox' or 'safari'"
+        if self.browser not in ["chrome", "firefox", "safari"]:
+            return False, "Browser must be 'chrome', 'firefox', or 'safari'"
 
         if self.login_method not in ["credentials", "google"]:
             return False, "Login method must be 'credentials' or 'google'"
