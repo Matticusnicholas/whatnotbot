@@ -18,7 +18,31 @@ A web-based automation tool that helps you enter giveaways on Whatnot live strea
 - Firefox browser with geckodriver OR Safari (macOS)
 - A valid Whatnot account
 
-## Installation
+## Quick Start
+
+### Windows
+
+1. Download or clone the repository
+2. Double-click `setup.bat` to install dependencies
+3. Double-click `run.bat` to start the bot
+4. Open http://localhost:5000 in your browser
+
+### macOS / Linux
+
+1. Download or clone the repository
+2. Open Terminal in the project folder
+3. Run the setup script:
+   ```bash
+   chmod +x setup.sh run.sh
+   ./setup.sh
+   ```
+4. Start the bot:
+   ```bash
+   ./run.sh
+   ```
+5. Open http://localhost:5000 in your browser
+
+## Manual Installation
 
 ### 1. Clone the repository
 
@@ -60,6 +84,11 @@ safaridriver --enable
 
 ### Start the Web Application
 
+**Windows:** Double-click `run.bat`
+
+**macOS/Linux:** Run `./run.sh`
+
+**Or manually:**
 ```bash
 python app.py
 ```
@@ -104,6 +133,10 @@ Click "Start Bot" to begin. The bot will:
 whatnotbot/
 ├── app.py                 # Flask web application
 ├── requirements.txt       # Python dependencies
+├── setup.bat              # Windows setup script
+├── run.bat                # Windows run script
+├── setup.sh               # macOS/Linux setup script
+├── run.sh                 # macOS/Linux run script
 ├── bot/
 │   ├── __init__.py
 │   ├── config.py         # Bot configuration
